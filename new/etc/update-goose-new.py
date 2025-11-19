@@ -412,6 +412,7 @@ def main():
             "time",
             "fmt",
             "log",
+            "unicode/utf8",
         )
 
     for proj in projs:

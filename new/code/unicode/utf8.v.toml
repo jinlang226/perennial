@@ -1,0 +1,35 @@
+# Configuration for unicode/utf8 package translation
+# Core UTF-8 validation and encoding/decoding functions
+#
+# NOTE: Most UTF-8 functions cannot be translated because:
+# 1. Goose doesn't support the `rune` type
+# 2. Goose doesn't support string indexing (s[i])
+# 3. Goose doesn't support range over string
+#
+# Therefore, these functions need to be axiomatized (trusted)
+# and we write Coq specifications for them manually.
+
+translate = [
+    "RuneStart", 
+    "ValidRune"
+]  
+
+
+imports = ["!*"] 
+
+# Axiomatize all other UTF-8 functions since they use rune type or string/slice indexing
+trusted = [
+    "Valid",
+    "ValidString",
+    "ValidRune",
+    "DecodeRune",
+    "DecodeRuneInString",
+    "DecodeLastRune",
+    "DecodeLastRuneInString",
+    "EncodeRune",
+    "RuneLen",
+    "FullRune",
+    "FullRuneInString",
+    "RuneCount",
+    "RuneCountInString"
+]
