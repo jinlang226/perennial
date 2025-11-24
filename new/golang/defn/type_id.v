@@ -37,6 +37,7 @@ Module int16T. Definition id : go_string := "int16". End int16T.
 Module int8T. Definition id : go_string := "int8". End int8T.
 
 Module byteT. Definition id : go_string := uint8T.id. End byteT.
+Module runeT. Definition id : go_string := int32T.id. End runeT.
 Module intT. Definition id : go_string := "int". End intT.
 Module uintT. Definition id : go_string := "uint". End uintT.
 
@@ -44,4 +45,4 @@ Module uintT. Definition id : go_string := "uint". End uintT.
 
 #[global] Opaque
  stringT.id boolT.id uint64T.id uint32T.id uint16T.id uint8T.id int64T.id int32T.id int16T.id
- int8T.id byteT.id intT.id uintT.id.
+ int8T.id byteT.id runeT.id intT.id uintT.id.

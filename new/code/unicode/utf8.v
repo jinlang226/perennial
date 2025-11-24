@@ -17,7 +17,7 @@ Axiom RuneError : val.
 
 Axiom RuneSelf : Z.
 
-Axiom MaxRune : val.
+Axiom MaxRune : Z.
 
 Axiom UTFMax : Z.
 
@@ -117,11 +117,37 @@ Definition RuneCountInString : go_string := "unicode/utf8.RuneCountInString"%go.
 
 Definition RuneStart : go_string := "unicode/utf8.RuneStart"%go.
 
+(* RuneStart reports whether the byte could be the first byte of an encoded,
+   possibly invalid rune. Second and subsequent bytes always have the top two
+   bits set to 10.
+
+   go: utf8.go:437:6 *)
+Definition RuneStartⁱᵐᵖˡ : val :=
+  λ: "b",
+    exception_do (let: "b" := (mem.alloc "b") in
+    return: (((![#byteT] "b") `and` #(W8 192)) ≠ #(W8 128))).
+
 Definition Valid : go_string := "unicode/utf8.Valid"%go.
 
 Definition ValidString : go_string := "unicode/utf8.ValidString"%go.
 
 Definition ValidRune : go_string := "unicode/utf8.ValidRune"%go.
+
+(* ValidRune reports whether r can be legally encoded as UTF-8.
+   Code points that are out of range or a surrogate half are illegal.
+
+   go: utf8.go:538:6 *)
+Definition ValidRuneⁱᵐᵖˡ : val :=
+  λ: "r",
+    exception_do (let: "r" := (mem.alloc "r") in
+    let: "$sw" := #true in
+    (if: "$sw" = ((int_leq #(W32 0) (![#runeT.id] "r")) && (int_lt (![#runeT.id] "r") #(W32 surrogateMin)))
+    then return: (#true)
+    else
+      (if: "$sw" = ((int_lt #(W32 surrogateMax) (![#runeT.id] "r")) && (int_leq (![#runeT.id] "r") #(W32 MaxRune)))
+      then return: (#true)
+      else do:  #()));;;
+    return: (#false)).
 
 Definition vars' : list (go_string * go_type) := [].
 
@@ -130,10 +156,6 @@ Axiom encodeRuneNonASCIIⁱᵐᵖˡ : val.
 Axiom AppendRuneⁱᵐᵖˡ : val.
 
 Axiom appendRuneNonASCIIⁱᵐᵖˡ : val.
-
-Axiom RuneStartⁱᵐᵖˡ : val.
-
-Axiom ValidRuneⁱᵐᵖˡ : val.
 
 Definition functions' : list (go_string * val) := [(FullRune, FullRuneⁱᵐᵖˡ); (FullRuneInString, FullRuneInStringⁱᵐᵖˡ); (DecodeRune, DecodeRuneⁱᵐᵖˡ); (DecodeRuneInString, DecodeRuneInStringⁱᵐᵖˡ); (DecodeLastRune, DecodeLastRuneⁱᵐᵖˡ); (DecodeLastRuneInString, DecodeLastRuneInStringⁱᵐᵖˡ); (RuneLen, RuneLenⁱᵐᵖˡ); (EncodeRune, EncodeRuneⁱᵐᵖˡ); (encodeRuneNonASCII, encodeRuneNonASCIIⁱᵐᵖˡ); (AppendRune, AppendRuneⁱᵐᵖˡ); (appendRuneNonASCII, appendRuneNonASCIIⁱᵐᵖˡ); (RuneCount, RuneCountⁱᵐᵖˡ); (RuneCountInString, RuneCountInStringⁱᵐᵖˡ); (RuneStart, RuneStartⁱᵐᵖˡ); (Valid, Validⁱᵐᵖˡ); (ValidString, ValidStringⁱᵐᵖˡ); (ValidRune, ValidRuneⁱᵐᵖˡ)].
 
