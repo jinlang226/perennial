@@ -10,7 +10,8 @@
 # and we write Coq specifications for them manually.
 
 translate = [
-    "RuneStart", 
+    "RuneStart",
+    "DecodeRune", 
     "ValidRune"
 ]  
 
@@ -21,8 +22,6 @@ imports = ["!*"]
 trusted = [
     "Valid",
     "ValidString",
-    "ValidRune",
-    "DecodeRune",
     "DecodeRuneInString",
     "DecodeLastRune",
     "DecodeLastRuneInString",
