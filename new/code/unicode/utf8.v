@@ -13,7 +13,7 @@ Section code.
 Context `{ffi_syntax}.
 
 
-Axiom RuneError : val.
+Axiom RuneError : Z.
 
 Axiom RuneSelf : Z.
 
@@ -73,11 +73,11 @@ Axiom s6 : Z.
 
 Axiom s7 : Z.
 
-Axiom runeErrorByte0 : val.
+Axiom runeErrorByte0 : Z.
 
-Axiom runeErrorByte1 : val.
+Axiom runeErrorByte1 : Z.
 
-Axiom runeErrorByte2 : val.
+Axiom runeErrorByte2 : Z.
 
 Definition first : go_string := "unicode/utf8.first"%go.
 
@@ -94,6 +94,76 @@ Definition FullRune : go_string := "unicode/utf8.FullRune"%go.
 Definition FullRuneInString : go_string := "unicode/utf8.FullRuneInString"%go.
 
 Definition DecodeRune : go_string := "unicode/utf8.DecodeRune"%go.
+
+(* DecodeRune unpacks the first UTF-8 encoding in p and returns the rune and
+   its width in bytes. If p is empty it returns ([RuneError], 0). Otherwise, if
+   the encoding is invalid, it returns (RuneError, 1). Both are impossible
+   results for correct, non-empty UTF-8.
+
+   An encoding is invalid if it is incorrect UTF-8, encodes a rune that is
+   out of range, or is not the shortest possible UTF-8 encoding for the
+   value. No other validation is performed.
+
+   go: utf8.go:157:6 *)
+Definition DecodeRuneⁱᵐᵖˡ : val :=
+  λ: "p",
+    exception_do (let: "size" := (mem.alloc (type.zero_val #intT)) in
+    let: "r" := (mem.alloc (type.zero_val #runeT)) in
+    let: "p" := (mem.alloc "p") in
+    let: "n" := (mem.alloc (type.zero_val #intT)) in
+    let: "$r0" := (let: "$a0" := (![#sliceT] "p") in
+    slice.len "$a0") in
+    do:  ("n" <-[#intT] "$r0");;;
+    (if: int_lt (![#intT] "n") #(W64 1)
+    then return: (#(W32 RuneError), #(W64 0))
+    else do:  #());;;
+    let: "p0" := (mem.alloc (type.zero_val #byteT)) in
+    let: "$r0" := (![#byteT] (slice.elem_ref #byteT (![#sliceT] "p") #(W64 0))) in
+    do:  ("p0" <-[#byteT] "$r0");;;
+    let: "x" := (mem.alloc (type.zero_val #uint8T)) in
+    let: "$r0" := (![#uint8T] (array.elem_ref #uint8T (![type.arrayT #(W64 256) #uint8T] (globals.get #first)) (![#byteT] "p0"))) in
+    do:  ("x" <-[#uint8T] "$r0");;;
+    (if: (![#uint8T] "x") ≥ #(W8 as')
+    then
+      let: "mask" := (mem.alloc (type.zero_val #runeT)) in
+      let: "$r0" := (((u_to_w32 (![#uint8T] "x")) ≪ #(W32 31)) ≫ #(W32 31)) in
+      do:  ("mask" <-[#runeT] "$r0");;;
+      return: (((u_to_w32 (![#byteT] (slice.elem_ref #byteT (![#sliceT] "p") #(W64 0)))) `and_not` (![#runeT] "mask")) `or` (#(W32 RuneError) `and` (![#runeT] "mask")), #(W64 1))
+    else do:  #());;;
+    let: "sz" := (mem.alloc (type.zero_val #intT)) in
+    let: "$r0" := (u_to_w64 ((![#uint8T] "x") `and` #(W8 7))) in
+    do:  ("sz" <-[#intT] "$r0");;;
+    let: "accept" := (mem.alloc (type.zero_val #acceptRange)) in
+    let: "$r0" := (![#acceptRange] (array.elem_ref #acceptRange (![type.arrayT #(W64 16) #acceptRange] (globals.get #acceptRanges)) ((![#uint8T] "x") ≫ #(W8 4)))) in
+    do:  ("accept" <-[#acceptRange] "$r0");;;
+    (if: int_lt (![#intT] "n") (![#intT] "sz")
+    then return: (#(W32 RuneError), #(W64 1))
+    else do:  #());;;
+    let: "b1" := (mem.alloc (type.zero_val #byteT)) in
+    let: "$r0" := (![#byteT] (slice.elem_ref #byteT (![#sliceT] "p") #(W64 1))) in
+    do:  ("b1" <-[#byteT] "$r0");;;
+    (if: ((![#byteT] "b1") < (![#uint8T] (struct.field_ref #acceptRange #"lo"%go "accept"))) || ((![#uint8T] (struct.field_ref #acceptRange #"hi"%go "accept")) < (![#byteT] "b1"))
+    then return: (#(W32 RuneError), #(W64 1))
+    else do:  #());;;
+    (if: int_leq (![#intT] "sz") #(W64 2)
+    then return: (((u_to_w32 ((![#byteT] "p0") `and` #(W8 mask2))) ≪ #(W32 6)) `or` (u_to_w32 ((![#byteT] "b1") `and` #(W8 maskx))), #(W64 2))
+    else do:  #());;;
+    let: "b2" := (mem.alloc (type.zero_val #byteT)) in
+    let: "$r0" := (![#byteT] (slice.elem_ref #byteT (![#sliceT] "p") #(W64 2))) in
+    do:  ("b2" <-[#byteT] "$r0");;;
+    (if: ((![#byteT] "b2") < #(W8 locb)) || (#(W8 hicb) < (![#byteT] "b2"))
+    then return: (#(W32 RuneError), #(W64 1))
+    else do:  #());;;
+    (if: int_leq (![#intT] "sz") #(W64 3)
+    then return: ((((u_to_w32 ((![#byteT] "p0") `and` #(W8 mask3))) ≪ #(W32 12)) `or` ((u_to_w32 ((![#byteT] "b1") `and` #(W8 maskx))) ≪ #(W32 6))) `or` (u_to_w32 ((![#byteT] "b2") `and` #(W8 maskx))), #(W64 3))
+    else do:  #());;;
+    let: "b3" := (mem.alloc (type.zero_val #byteT)) in
+    let: "$r0" := (![#byteT] (slice.elem_ref #byteT (![#sliceT] "p") #(W64 3))) in
+    do:  ("b3" <-[#byteT] "$r0");;;
+    (if: ((![#byteT] "b3") < #(W8 locb)) || (#(W8 hicb) < (![#byteT] "b3"))
+    then return: (#(W32 RuneError), #(W64 1))
+    else do:  #());;;
+    return: (((((u_to_w32 ((![#byteT] "p0") `and` #(W8 mask4))) ≪ #(W32 18)) `or` ((u_to_w32 ((![#byteT] "b1") `and` #(W8 maskx))) ≪ #(W32 12))) `or` ((u_to_w32 ((![#byteT] "b2") `and` #(W8 maskx))) ≪ #(W32 6))) `or` (u_to_w32 ((![#byteT] "b3") `and` #(W8 maskx))), #(W64 4))).
 
 Definition DecodeRuneInString : go_string := "unicode/utf8.DecodeRuneInString"%go.
 
@@ -141,10 +211,10 @@ Definition ValidRuneⁱᵐᵖˡ : val :=
   λ: "r",
     exception_do (let: "r" := (mem.alloc "r") in
     let: "$sw" := #true in
-    (if: "$sw" = ((int_leq #(W32 0) (![#runeT.id] "r")) && (int_lt (![#runeT.id] "r") #(W32 surrogateMin)))
+    (if: "$sw" = ((int_leq #(W32 0) (![#runeT] "r")) && (int_lt (![#runeT] "r") #(W32 surrogateMin)))
     then return: (#true)
     else
-      (if: "$sw" = ((int_lt #(W32 surrogateMax) (![#runeT.id] "r")) && (int_leq (![#runeT.id] "r") #(W32 MaxRune)))
+      (if: "$sw" = ((int_lt #(W32 surrogateMax) (![#runeT] "r")) && (int_leq (![#runeT] "r") #(W32 MaxRune)))
       then return: (#true)
       else do:  #()));;;
     return: (#false)).
