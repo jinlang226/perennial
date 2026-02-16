@@ -10,25 +10,24 @@
 # and we write Coq specifications for them manually.
 
 translate = [
-    "RuneStart",
-    "DecodeRune", 
-    "ValidRune"
-]  
+  "RuneStart",
+  "DecodeRune",
+  "ValidRune",
+]
 
-
-imports = ["!*"] 
+imports = ["!*"]
 
 # Axiomatize all other UTF-8 functions since they use rune type or string/slice indexing
 trusted = [
-    "Valid",
-    "ValidString",
-    "DecodeRuneInString",
-    "DecodeLastRune",
-    "DecodeLastRuneInString",
-    "EncodeRune",
-    "RuneLen",
-    "FullRune",
-    "FullRuneInString",
-    "RuneCount",
-    "RuneCountInString"
+  "Valid",
+  "ValidString",
+  "DecodeRuneInString",
+  "DecodeLastRune",
+  "DecodeLastRuneInString",
+  "EncodeRune",
+  "RuneLen",
+  "FullRune",
+  "FullRuneInString",
+  "RuneCount",
+  "RuneCountInString",
 ]
