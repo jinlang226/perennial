@@ -9,11 +9,7 @@
 # Therefore, these functions need to be axiomatized (trusted)
 # and we write Coq specifications for them manually.
 
-translate = [
-  "RuneStart",
-  "DecodeRune",
-  "ValidRune",
-]
+translate = ["RuneStart", "DecodeRune", "ValidRune"]
 
 imports = ["!*"]
 
